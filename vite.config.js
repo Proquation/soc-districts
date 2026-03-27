@@ -6,7 +6,7 @@ export default defineConfig(({ command }) => ({
 	publicDir: 'static',
 	base: command === 'serve' ? '/' : '/districts/',
 	build: {
-		outDir: 'dist',
+		outDir: 'docs',
 		assetsDir: 'assets'
 	},
 	server: {
