@@ -46,19 +46,37 @@
     ];
   }
 
-  // Build color expression for normalized differences
+  // Build expression for normalized percent change: ((2025 - 2019) / |2019|) * 100
+  function getNormalizedPercentChangeExpression() {
+    return [
+      'case',
+      ['<', ['abs', ['get', 'normed_2019']], 0.000000001],
+      0,
+      [
+        '*',
+        [
+          '/',
+          ['-', ['get', 'normed_2025'], ['get', 'normed_2019']],
+          ['abs', ['get', 'normed_2019']]
+        ],
+        100
+      ]
+    ];
+  }
+
+  // Build color expression for normalized percent changes
   function getNormedColorExpression() {
     return [
       'interpolate',
       ['linear'],
-      ['get', 'normed_diff'],
-      -0.0001, '#d73027',
-      -0.00005, '#fc8d59',
-      -0.00001, '#fee08b',
+      getNormalizedPercentChangeExpression(),
+      -50, '#d73027',
+      -25, '#fc8d59',
+      -10, '#fee08b',
       0, '#ffffbf',
-      0.00001, '#d9ef8b',
-      0.00005, '#91cf60',
-      0.0001, '#1a9850'
+      10, '#d9ef8b',
+      25, '#91cf60',
+      50, '#1a9850'
     ];
   }
 
