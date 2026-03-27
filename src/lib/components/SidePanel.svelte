@@ -137,8 +137,8 @@
 
 <style>
   .side-panel {
-    width: var(--sidebar-width, 360px);
-    height: 100vh;
+    width: 100%;
+    height: 100%;
     background-color: var(--brand-dark-bg, #111a1a);
     padding: 20px;
     overflow-y: auto;
@@ -262,5 +262,32 @@
 
   footer a {
     color: var(--brand-light-blue, #6fc7ea);
+  }
+
+  @media (max-width: 900px) {
+    .side-panel {
+      border-right: none;
+      border-top: 1px solid var(--brand-gray-70, rgba(148, 146, 138, 0.3));
+      padding: 14px 16px;
+      gap: 14px;
+    }
+
+    header h1 {
+      font-size: 1.2rem;
+    }
+
+    .subtitle {
+      font-size: 0.8rem;
+    }
+
+    .filter-section,
+    .legend-section {
+      padding-bottom: 10px;
+    }
+
+    footer {
+      padding-top: 8px;
+      font-size: 0.7rem;
+    }
   }
 </style>
