@@ -1,0 +1,75 @@
+/* Global styles for District Map App */
+
+:root {
+  /* Brand colors - dark theme */
+  --brand-black: #000000;
+  --brand-dark-bg: #111a1a;
+  --brand-dark-blue: #1e3765;
+  --brand-medium-blue: #007fa3;
+  --brand-light-blue: #6fc7ea;
+  --brand-white: #ffffff;
+  --brand-gray: #94928a;
+  --brand-gray-70: rgba(148, 146, 138, 0.7);
+  
+  /* Semantic colors */
+  --color-decrease: #d73027;
+  --color-decrease-light: #fc8d59;
+  --color-neutral: #ffffbf;
+  --color-increase-light: #91bfdb;
+  --color-increase: #4575b4;
+  
+  /* Layout */
+  --sidebar-width: 360px;
+  --header-height: 50px;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+  background-color: var(--brand-black);
+  color: var(--brand-white);
+  overflow: hidden;
+}
+
+#app {
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+}
+
+a {
+  color: var(--brand-light-blue);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--brand-dark-bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brand-gray);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brand-light-blue);
+}
