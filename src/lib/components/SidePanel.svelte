@@ -53,7 +53,7 @@
         <button
           class="city-button"
           class:selected={selectedCity === city}
-          on:click={() => selectCity(city)}
+          onclick={() => selectCity(city)}
         >
           {city === 'Washington' ? 'Washington D.C.' : city}
         </button>
@@ -67,14 +67,14 @@
       <button
         class="type-button"
         class:selected={valueType === 'normalized'}
-        on:click={() => selectValueType('normalized')}
+        onclick={() => selectValueType('normalized')}
       >
         Normalized
       </button>
       <button
         class="type-button"
         class:selected={valueType === 'raw'}
-        on:click={() => selectValueType('raw')}
+        onclick={() => selectValueType('raw')}
       >
         Raw Difference
       </button>
@@ -94,7 +94,7 @@
       <button
         class="type-button"
         class:selected={selectedTypes.length === 0}
-        on:click={selectAllTypes}
+        onclick={selectAllTypes}
       >
         All
       </button>
@@ -102,7 +102,7 @@
         <button
           class="type-button"
           class:selected={selectedTypes.length === 1 && selectedTypes[0] === type}
-          on:click={() => toggleTypeFilter(type)}
+          onclick={() => toggleTypeFilter(type)}
         >
           {type.replace(' District', '')}
         </button>
@@ -171,8 +171,7 @@
   }
 
   .filter-section,
-  .legend-section,
-  .info-section {
+  .legend-section {
     padding-bottom: 15px;
     border-bottom: 1px solid var(--brand-gray-70, rgba(148, 146, 138, 0.3));
   }
@@ -248,71 +247,6 @@
     justify-content: space-between;
     font-size: 0.75rem;
     color: var(--brand-gray, #94928a);
-  }
-
-  .district-info {
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-    padding: 12px;
-  }
-
-  .district-info h3 {
-    font-size: 1rem;
-    font-weight: 600;
-    margin-bottom: 4px;
-    color: var(--brand-white, #fff);
-  }
-
-  .district-type {
-    font-size: 0.8rem;
-    color: var(--brand-light-blue, #6fc7ea);
-    margin-bottom: 12px;
-  }
-
-  .stats-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-
-  .stat {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .stat.full-width {
-    grid-column: span 2;
-  }
-
-  .stat-label {
-    font-size: 0.75rem;
-    color: var(--brand-gray, #94928a);
-    margin-bottom: 2px;
-  }
-
-  .stat-value {
-    font-size: 1.1rem;
-    font-weight: 600;
-    color: var(--brand-white, #fff);
-  }
-
-  .stat-value.increase {
-    color: #91cf60;
-  }
-
-  .stat-value.decrease {
-    color: #fc8d59;
-  }
-
-  .stat-value.neutral {
-    color: #ffffbf;
-  }
-
-  .hover-hint {
-    font-style: italic;
-    color: var(--brand-gray, #94928a);
-    text-align: center;
-    padding: 20px;
   }
 
   footer {
