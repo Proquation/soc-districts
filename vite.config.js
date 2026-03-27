@@ -4,7 +4,7 @@ import { svelte } from '@sveltejs/vite-plugin-svelte';
 export default defineConfig(({ command }) => ({
 	plugins: [svelte()],
 	publicDir: 'static',
-	base: command === 'serve' ? '/' : '/districts/',
+	base: command === 'serve' ? '/' : '/soc-districts/',
 	build: {
 		outDir: 'docs',
 		assetsDir: 'assets'
