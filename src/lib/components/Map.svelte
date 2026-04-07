@@ -46,7 +46,7 @@
     ];
   }
 
-  // Build expression for normalized percent change: ((2025 - 2019) / |2019|) * 100
+  // Build expression for normalized percent change: (normed_diff / |2019|) * 100
   function getNormalizedPercentChangeExpression() {
     return [
       'case',
@@ -56,7 +56,7 @@
         '*',
         [
           '/',
-          ['-', ['get', 'normed_2025'], ['get', 'normed_2019']],
+          ['get', 'normed_diff'],
           ['abs', ['get', 'normed_2019']]
         ],
         100
@@ -353,14 +353,14 @@
           return (num * 1000000).toFixed(2) + ' (×10⁻⁶)';
         };
 
-        const getPercentChange = (fromValue, toValue) => {
-          if (fromValue === null || fromValue === undefined || toValue === null || toValue === undefined) {
+        const getPercentChange = (fromValue, diffValue) => {
+          if (fromValue === null || fromValue === undefined || diffValue === null || diffValue === undefined) {
             return null;
           }
           if (fromValue === 0) {
-            return toValue === 0 ? 0 : null;
+            return diffValue === 0 ? 0 : null;
           }
-          return ((toValue - fromValue) / Math.abs(fromValue)) * 100;
+          return (diffValue / Math.abs(fromValue)) * 100;
         };
 
         const formatPercentChange = (num) => {
@@ -371,27 +371,27 @@
         };
 
         const getChangeColor = (value) => {
-          if (value > 0) return '#91cf60'; // green
-          if (value < 0) return '#fc8d59'; // red
+          if (value > 0) return 'var(--brandMedGreen)'; // green
+          if (value < 0) return 'var(--brandRed)'; // red
           return '#ffffbf'; // yellow
         };
 
         const changeValue = valueType === 'raw'
           ? props.raw_diff
-          : getPercentChange(props.normed_2019, props.normed_2025);
+          : getPercentChange(props.normed_2019, props.normed_diff);
         const changeColor = getChangeColor(changeValue);
         const detailSection = valueType === 'raw'
           ? `
-            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
+            <div class="popup-detail-grid">
               <div>
-                <div style="font-size: 10px; color: #94928a;">2019 Stops</div>
-                <div style="font-size: 13px; font-weight: 600; color: #fff;">
+                <div class="popup-detail-label">2019 Stops</div>
+                <div class="popup-detail-value">
                   ${formatNumber(props.total_stops_2019)}
                 </div>
               </div>
               <div>
-                <div style="font-size: 10px; color: #94928a;">2025 Stops</div>
-                <div style="font-size: 13px; font-weight: 600; color: #fff;">
+                <div class="popup-detail-label">2025 Stops</div>
+                <div class="popup-detail-value">
                   ${formatNumber(props.total_stops_2025)}
                 </div>
               </div>
@@ -405,17 +405,17 @@
 
         // Build popup HTML
         const html = `
-          <div style="padding: 8px;">
-            <h3 style="margin: 0 0 4px 0; font-size: 14px; font-weight: 600; color: #fff;">
+          <div class="popup-container">
+            <h3 class="popup-title">
               ${props.district_name}
             </h3>
-            <p style="margin: 0 0 8px 0; font-size: 11px; color: #94928a;">
+            <p class="popup-subtitle">
               ${props.district_type}
             </p>
             ${detailSection}
-            <div style="border-top: 1px solid rgba(148, 146, 138, 0.3); padding-top: 8px;">
-              <div style="font-size: 10px; color: #94928a;">${changeLabel}</div>
-              <div style="font-size: 14px; font-weight: 700; color: ${changeColor};">
+            <div class="popup-change-row">
+              <div class="popup-change-label">${changeLabel}</div>
+              <div class="popup-change-value" style="color: ${changeColor};">
                 ${changeDisplay}
               </div>
             </div>
@@ -448,6 +448,7 @@
       container: mapContainer,
       style: {
         version: 8,
+        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
         sources: {
           'carto-dark': {
             type: 'raster',
@@ -503,80 +504,53 @@
     height: 100%;
   }
 
-  :global(.maplibregl-ctrl-attrib) {
-    background-color: rgba(0, 0, 0, 0.7) !important;
-    color: #ccc !important;
+  :global(.popup-container) {
+    padding: 8px;
   }
 
-  :global(.maplibregl-ctrl-attrib a) {
-    color: #6fc7ea !important;
+  :global(.popup-title) {
+    margin: 0 0 4px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: #000;
   }
 
-  /* Custom popup styling */
-  :global(.maplibregl-popup-content) {
-    background-color: #1e3765 !important;
-    border-radius: 8px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5) !important;
-    padding: 0 !important;
+  :global(.popup-subtitle) {
+    margin: 0 0 8px 0;
+    font-size: 11px;
+    color: #000;
   }
 
-  :global(.district-popup .maplibregl-popup-tip) {
-    border-color: transparent;
+  :global(.popup-detail-grid) {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-bottom: 8px;
   }
 
-  :global(.district-popup.maplibregl-popup-anchor-top .maplibregl-popup-tip) {
-    border-top-color: transparent !important;
-    border-right-color: transparent !important;
-    border-bottom-color: #1e3765 !important;
-    border-left-color: transparent !important;
+  :global(.popup-detail-label) {
+    font-size: 10px;
+    color: var(--brandGray70);
   }
 
-  :global(.district-popup.maplibregl-popup-anchor-bottom .maplibregl-popup-tip) {
-    border-top-color: #1e3765 !important;
-    border-right-color: transparent !important;
-    border-bottom-color: transparent !important;
-    border-left-color: transparent !important;
+  :global(.popup-detail-value) {
+    font-size: 13px;
+    font-weight: 600;
+    color: #000;
   }
 
-  :global(.district-popup.maplibregl-popup-anchor-left .maplibregl-popup-tip) {
-    border-top-color: transparent !important;
-    border-right-color: #1e3765 !important;
-    border-bottom-color: transparent !important;
-    border-left-color: transparent !important;
+  :global(.popup-change-row) {
+    border-top: 1px solid var(--brandGray70);
+    padding-top: 8px;
   }
 
-  :global(.district-popup.maplibregl-popup-anchor-right .maplibregl-popup-tip) {
-    border-top-color: transparent !important;
-    border-right-color: transparent !important;
-    border-bottom-color: transparent !important;
-    border-left-color: #1e3765 !important;
+  :global(.popup-change-label) {
+    font-size: 10px;
+    color: #000;
   }
 
-  :global(.district-popup.maplibregl-popup-anchor-top-left .maplibregl-popup-tip) {
-    border-top-color: transparent !important;
-    border-right-color: #1e3765 !important;
-    border-bottom-color: #1e3765 !important;
-    border-left-color: transparent !important;
-  }
-
-  :global(.district-popup.maplibregl-popup-anchor-top-right .maplibregl-popup-tip) {
-    border-top-color: transparent !important;
-    border-right-color: transparent !important;
-    border-bottom-color: #1e3765 !important;
-    border-left-color: #1e3765 !important;
-  }
-
-  :global(.district-popup.maplibregl-popup-anchor-bottom-left .maplibregl-popup-tip) {
-    border-top-color: #1e3765 !important;
-    border-right-color: #1e3765 !important;
-    border-bottom-color: transparent !important;
-    border-left-color: transparent !important;
-  }
-
-  :global(.district-popup.maplibregl-popup-anchor-bottom-right .maplibregl-popup-tip) {
-    border-top-color: #1e3765 !important;
-    border-right-color: transparent !important;
-    border-bottom-color: transparent !important;
-    border-left-color: #1e3765 !important;
+  :global(.popup-change-value) {
+    font-size: 14px;
+    font-weight: 700;
   }
 </style>

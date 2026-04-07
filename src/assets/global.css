@@ -1,26 +1,23 @@
 /* Global styles for District Map App */
 
 :root {
-  /* Brand colors - dark theme */
-  --brand-black: #000000;
-  --brand-dark-bg: #111a1a;
-  --brand-dark-blue: #1e3765;
-  --brand-medium-blue: #007fa3;
-  --brand-light-blue: #6fc7ea;
-  --brand-white: #ffffff;
-  --brand-gray: #94928a;
-  --brand-gray-70: rgba(148, 146, 138, 0.7);
-  
-  /* Semantic colors */
-  --color-decrease: #d73027;
-  --color-decrease-light: #fc8d59;
-  --color-neutral: #ffffbf;
-  --color-increase-light: #91bfdb;
-  --color-increase: #4575b4;
-  
-  /* Layout */
-  --sidebar-width: 360px;
-  --header-height: 50px;
+    font-family: Roboto, sans-serif;
+    --brandDarkBlue: #1E3765;
+    --brandMedBlue: #007FA3;
+    --brandLightBlue: #6FC7EA;
+    --brandPurple: #6D247A;
+    --brandPink: #AB1368;
+    --brandDarkGreen: #0D534D;
+    --brandMedGreen: #00A189;
+    --brandLightGreen: #8DBF2E;
+    --brandRed: #DC4633;
+    --brandYellow: #F1C500;
+    --brandBlack: #000000;
+    --brandWhite: #ffffff;
+    --brandGray: #D0D1C9;
+    --brandGray70: #4d4d4d;
+    --brandGray80: #333333;
+    --brandGray90: #191919;
 }
 
 * {

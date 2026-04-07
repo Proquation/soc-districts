@@ -45,6 +45,14 @@
     <h1>District Comparison</h1>
     <p class="subtitle">2019 vs 2025 Activity Changes</p>
   </header>
+  
+
+  <section class="description">
+    <p>
+      Activity differences between 2019 and 2025 for districts in each metro area.
+      Raw values and normalized values of stops shown. Normalization is each district's stops divided by the total number of stops in the metro area.
+    </p>
+  </section>
 
   <section class="filter-section">
     <h2>Select City</h2>
@@ -139,32 +147,32 @@
   .side-panel {
     width: 100%;
     height: 100%;
-    background-color: var(--brand-dark-bg, #111a1a);
+    background-color: var(--brandBlack, #111a1a);
     padding: 20px;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
     gap: 20px;
-    border-right: 1px solid var(--brand-gray-70, rgba(148, 146, 138, 0.3));
+    border-right: 1px solid var(--brandGray70, rgba(148, 146, 138, 0.3));
   }
 
   header h1 {
     font-size: 1.5rem;
     font-weight: bold;
     margin-bottom: 4px;
-    color: var(--brand-white, #fff);
+    color: var(--brandWhite, #fff);
   }
 
   .subtitle {
     font-size: 0.9rem;
-    color: var(--brand-gray, #94928a);
+    color: var(--brandGray, #94928a);
   }
 
   h2 {
     font-size: 1rem;
     font-weight: 600;
     margin-bottom: 10px;
-    color: var(--brand-white, #fff);
+    color: var(--brandWhite, #fff);
     display: flex;
     align-items: center;
     gap: 10px;
@@ -173,7 +181,7 @@
   .filter-section,
   .legend-section {
     padding-bottom: 15px;
-    border-bottom: 1px solid var(--brand-gray-70, rgba(148, 146, 138, 0.3));
+    border-bottom: 1px solid var(--brandGray70, rgba(148, 146, 138, 0.3));
   }
 
   .button-group {
@@ -187,10 +195,10 @@
     flex: 1;
     min-width: 120px;
     padding: 10px 16px;
-    border: 1px solid var(--brand-gray, #94928a);
+    border: 1px solid var(--brandGray, #94928a);
     border-radius: 6px;
     background-color: transparent;
-    color: var(--brand-white, #fff);
+    color: var(--brandWhite, #fff);
     font-size: 0.9rem;
     font-weight: 500;
     transition: all 0.2s ease;
@@ -206,22 +214,23 @@
 
   .city-button:hover,
   .type-button:hover {
-    background-color: var(--brand-dark-blue, #1e3765);
+    background-color: var(--brandMedBlue);
+    border-color: var(--brandWhite);
     opacity: 1;
   }
 
   .city-button.selected,
   .type-button.selected {
-    background-color: var(--brand-medium-blue, #007fa3);
-    border-color: var(--brand-light-blue, #6fc7ea);
+    background-color: var(--brandDarkBlue);
+    border-color: var(--brandWhite);
     opacity: 1;
   }
 
   .description {
     font-size: 0.8rem;
-    color: var(--brand-gray, #94928a);
-    margin-top: 8px;
+    color: var(--brandGray, #94928a);
     line-height: 1.4;
+    margin-top: 8px;
   }
 
   .legend {
@@ -246,14 +255,14 @@
     display: flex;
     justify-content: space-between;
     font-size: 0.75rem;
-    color: var(--brand-gray, #94928a);
+    color: var(--brandGray, #94928a);
   }
 
   footer {
     margin-top: auto;
     padding-top: 15px;
     font-size: 0.75rem;
-    color: var(--brand-gray, #94928a);
+    color: var(--brandGray, #94928a);
   }
 
   footer p {
@@ -261,13 +270,13 @@
   }
 
   footer a {
-    color: var(--brand-light-blue, #6fc7ea);
+    color: var(--brandLightBlue, #6fc7ea);
   }
 
   @media (max-width: 900px) {
     .side-panel {
       border-right: none;
-      border-top: 1px solid var(--brand-gray-70, rgba(148, 146, 138, 0.3));
+      border-top: 1px solid var(--brandGray70, rgba(148, 146, 138, 0.3));
       padding: 14px 16px;
       gap: 14px;
     }
