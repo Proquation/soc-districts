@@ -2,11 +2,9 @@
   // Props using Svelte 5 syntax
   let {
     selectedCity = 'San Francisco',
-    valueType = 'normalized',
     selectedTypes = [],
     districtTypes = [],
     onCityChange = () => {},
-    onValueTypeChange = () => {},
     onTypeFilterChange = () => {}
   } = $props();
 
@@ -16,11 +14,6 @@
   // Handle city button click
   function selectCity(city) {
     onCityChange(city);
-  }
-
-  // Handle value type toggle
-  function selectValueType(type) {
-    onValueTypeChange(type);
   }
 
   // Handle type filter checkbox
@@ -50,7 +43,7 @@
   <section class="description">
     <p>
       Activity differences between 2019 and 2025 for districts in each metro area.
-      Raw values and normalized values of stops shown. Normalization is each district's stops divided by the total number of stops in the metro area.
+      Normalized values of stops shown. Normalization is each district's stops divided by the total number of stops in the metro area.
     </p>
   </section>
 
@@ -67,33 +60,6 @@
         </button>
       {/each}
     </div>
-  </section>
-
-  <section class="filter-section">
-    <h2>Value Type</h2>
-    <div class="button-group">
-      <button
-        class="type-button"
-        class:selected={valueType === 'normalized'}
-        onclick={() => selectValueType('normalized')}
-      >
-        Normalized
-      </button>
-      <button
-        class="type-button"
-        class:selected={valueType === 'raw'}
-        onclick={() => selectValueType('raw')}
-      >
-        Raw Difference
-      </button>
-    </div>
-    <p class="description">
-      {#if valueType === 'raw'}
-        Shows the absolute change in total stops between 2019 and 2025.
-      {:else}
-        Shows normalized percent change from 2019 to 2025.
-      {/if}
-    </p>
   </section>
 
   <section class="filter-section">
@@ -139,7 +105,7 @@
 
   <footer>
     <p>Data: <a href="https://cuebiq.com/">Cuebiq</a> mobile phone activity stops</p>
-    <p>Map: <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> &amp; <a href="https://openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a></p>
+    <p>Map: &amp; <a href="https://openstreetmap.org/" target="_blank" rel="noopener">OpenStreetMap</a></p>
   </footer>
 </aside>
 
@@ -147,7 +113,7 @@
   .side-panel {
     width: 100%;
     height: 100%;
-    background-color: var(--brandBlack, #111a1a);
+    background-color:#181818;
     padding: 20px;
     overflow-y: auto;
     display: flex;
@@ -242,11 +208,11 @@
     border-radius: 4px;
     background: linear-gradient(
       to right,
-      #d73027 0%,
-      #fc8d59 25%,
-      #ffffbf 50%,
-      #91cf60 75%,
-      #1a9850 100%
+      var(--brandRed) 0%,
+      var(--brandYellow) 25%,
+      var(--brandGray) 50%,
+      var(--brandLightBlue) 75%,
+      var(--brandMedBlue) 100%
     );
     margin-bottom: 6px;
   }

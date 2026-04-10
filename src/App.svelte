@@ -5,7 +5,6 @@
 
   // App state using Svelte 5 runes
   let selectedCity = $state('San Francisco');
-  let valueType = $state('normalized'); // 'raw' or 'normalized'
   let selectedTypes = $state([]); // empty = all types
 
   // Available district types (will be populated from data)
@@ -13,10 +12,6 @@
 
   function handleCityChange(city) {
     selectedCity = city;
-  }
-
-  function handleValueTypeChange(type) {
-    valueType = type;
   }
 
   function handleTypeFilterChange(types) {
@@ -28,18 +23,15 @@
   <div class="sidebar-shell">
     <SidePanel
       {selectedCity}
-      {valueType}
       {selectedTypes}
       {districtTypes}
       onCityChange={handleCityChange}
-      onValueTypeChange={handleValueTypeChange}
       onTypeFilterChange={handleTypeFilterChange}
     />
   </div>
   <div class="map-shell">
     <Map
       {selectedCity}
-      {valueType}
       {selectedTypes}
     />
   </div>

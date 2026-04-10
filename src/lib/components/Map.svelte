@@ -3,15 +3,23 @@
   import * as maplibregl from 'maplibre-gl';
   import 'maplibre-gl/dist/maplibre-gl.css';
   import * as pmtiles from 'pmtiles';
+  import baseMap from '../../assets/base_map_style.json';
 
   // Props
-  let { selectedCity = 'San Francisco', valueType = 'normalized', selectedTypes = [] } = $props();
+  let { selectedCity = 'San Francisco', selectedTypes = [] } = $props();
 
   let map = $state();
   let mapContainer = $state();
   let isMapLoaded = $state(false);
   let usePmtiles = $state(true); // Try PMTiles first with improved URL resolution
   let popup = null; // MapLibre Popup instance
+  const sourceId = 'districts-source';
+  const layerId = 'districts-layer';
+  const hoverFillLayerId = 'districts-hover-fill';
+  const hoverOutlineLayerId = 'districts-hover-outline';
+  const noHoverFilter = ['==', ['get', 'district_name'], '__NO_HOVER__'];
+  let hoverMoveHandler = null;
+  let hoverLeaveHandler = null;
 
   // City center coordinates
   const cityCoords = {
@@ -28,22 +36,6 @@
 
   function toAbsoluteUrl(path) {
     return new URL(path, window.location.origin).toString();
-  }
-
-  // Build color expression for raw differences
-  function getRawColorExpression() {
-    return [
-      'interpolate',
-      ['linear'],
-      ['get', 'raw_diff'],
-      -1000000, '#d73027',   // Strong decrease - red
-      -100000, '#fc8d59',    // Moderate decrease
-      -10000, '#fee08b',     // Slight decrease
-      0, '#ffffbf',          // Neutral - yellow
-      10000, '#d9ef8b',      // Slight increase
-      100000, '#91cf60',     // Moderate increase
-      1000000, '#1a9850'     // Strong increase - green
-    ];
   }
 
   // Build expression for normalized percent change: (normed_diff / |2019|) * 100
@@ -70,13 +62,13 @@
       'interpolate',
       ['linear'],
       getNormalizedPercentChangeExpression(),
-      -50, '#d73027',
-      -25, '#fc8d59',
-      -10, '#fee08b',
-      0, '#ffffbf',
-      10, '#d9ef8b',
-      25, '#91cf60',
-      50, '#1a9850'
+      -50, '#DC4633',   // var(--brandRed)
+      -25, '#F1C500',   // var(--brandYellow) - just blending nicely since red-green is tricky, let's use Yellow for middle-negative. Or maybe Pink? The user said "brandMedBlue for the increase amount instead of green"
+      -10, '#D0D1C9',   // var(--brandGray)
+      0,   '#D0D1C9',   // var(--brandGray)
+      10,  '#6FC7EA',   // var(--brandLightBlue)
+      25,  '#007FA3',   // var(--brandMedBlue)
+      50,  '#1E3765'    // var(--brandDarkBlue)
     ];
   }
 
@@ -84,13 +76,6 @@
   $effect(() => {
     if (map && isMapLoaded && selectedCity) {
       updateMapSource();
-    }
-  });
-
-  // Update colors when value type changes
-  $effect(() => {
-    if (map && isMapLoaded && valueType) {
-      updateMapColors();
     }
   });
 
@@ -105,14 +90,7 @@
   });
 
   async function updateMapSource() {
-    const layerId = 'districts-layer';
-    const outlineLayerId = 'districts-outline';
-    const sourceId = 'districts-source';
-
-    // Remove existing layers and source
-    if (map.getLayer(layerId)) map.removeLayer(layerId);
-    if (map.getLayer(outlineLayerId)) map.removeLayer(outlineLayerId);
-    if (map.getSource(sourceId)) map.removeSource(sourceId);
+    removeDistrictLayersAndSource();
 
     const citySlug = selectedCity === 'San Francisco' ? 'sf_districts' : 'dc_districts';
 
@@ -160,20 +138,18 @@
           attribution: 'District boundaries'
         });
 
-        addDistrictLayers(layerId, outlineLayerId, sourceId, citySlug);
+        addDistrictLayers(layerId, sourceId, citySlug);
       } catch (err) {
         console.warn('PMTiles failed, falling back to GeoJSON:', err);
         
         // Clean up any partially added sources/layers from failed PMTiles attempt
-        if (map.getLayer(layerId)) map.removeLayer(layerId);
-        if (map.getLayer(outlineLayerId)) map.removeLayer(outlineLayerId);
-        if (map.getSource(sourceId)) map.removeSource(sourceId);
+        removeDistrictLayersAndSource();
         
         usePmtiles = false;
-        await loadGeoJSON(sourceId, layerId, outlineLayerId);
+        await loadGeoJSON(sourceId, layerId);
       }
     } else {
-      await loadGeoJSON(sourceId, layerId, outlineLayerId);
+      await loadGeoJSON(sourceId, layerId);
     }
 
     // Fly to city
@@ -185,7 +161,7 @@
     });
   }
 
-  async function loadGeoJSON(sourceId, layerId, outlineLayerId) {
+  async function loadGeoJSON(sourceId, layerId) {
     const citySlug = selectedCity === 'San Francisco' ? 'sf_districts' : 'dc_districts';
     const relativePath = `data/${citySlug}.geojson`;
     const candidateUrls = [
@@ -214,12 +190,19 @@
 
         const geojson = JSON.parse(text);
 
-        map.addSource(sourceId, {
-          type: 'geojson',
-          data: geojson
-        });
+        const existingSource = map.getSource(sourceId);
+        if (existingSource && typeof existingSource.setData === 'function') {
+          existingSource.setData(geojson);
+        } else {
+          map.addSource(sourceId, {
+            type: 'geojson',
+            data: geojson
+          });
+        }
 
-        addDistrictLayersGeoJSON(layerId, outlineLayerId, sourceId);
+        if (!map.getLayer(layerId)) {
+          addDistrictLayersGeoJSON(layerId, sourceId);
+        }
         return;
       } catch (err) {
         lastError = err;
@@ -230,8 +213,8 @@
     console.error('Failed to load GeoJSON from all candidate URLs:', uniqueCandidateUrls, lastError);
   }
 
-  function addDistrictLayers(layerId, outlineLayerId, sourceId, sourceLayer) {
-    const colorExpr = valueType === 'raw' ? getRawColorExpression() : getNormedColorExpression();
+  function addDistrictLayers(layerId, sourceId, sourceLayer) {
+    const colorExpr = getNormedColorExpression();
 
     // Fill layer
     map.addLayer({
@@ -239,68 +222,88 @@
       type: 'fill',
       source: sourceId,
       'source-layer': sourceLayer,
+      layout: {
+        'fill-sort-key': ['coalesce', ['get', 'z_sort'], 0]
+      },
       paint: {
         'fill-color': colorExpr,
         'fill-opacity': 0.8
       }
     });
 
-    // Outline layer
     map.addLayer({
-      id: outlineLayerId,
+      id: hoverFillLayerId,
+      type: 'fill',
+      source: sourceId,
+      'source-layer': sourceLayer,
+      filter: noHoverFilter,
+      paint: {
+        'fill-color': '#000000',
+        'fill-opacity': 0.22
+      }
+    });
+
+    map.addLayer({
+      id: hoverOutlineLayerId,
       type: 'line',
       source: sourceId,
       'source-layer': sourceLayer,
+      filter: noHoverFilter,
       paint: {
         'line-color': '#ffffff',
-        'line-width': 1.5,
-        'line-opacity': 0.7
+        'line-width': 1.6,
+        'line-opacity': 0.95
       }
     });
 
     setupHoverInteraction(layerId);
   }
 
-  function addDistrictLayersGeoJSON(layerId, outlineLayerId, sourceId) {
-    const colorExpr = valueType === 'raw' ? getRawColorExpression() : getNormedColorExpression();
+  function addDistrictLayersGeoJSON(layerId, sourceId) {
+    const colorExpr = getNormedColorExpression();
 
     // Fill layer (no source-layer for GeoJSON)
     map.addLayer({
       id: layerId,
       type: 'fill',
       source: sourceId,
+      layout: {
+        'fill-sort-key': ['coalesce', ['get', 'z_sort'], 0]
+      },
       paint: {
         'fill-color': colorExpr,
         'fill-opacity': 0.8
       }
     });
 
-    // Outline layer
     map.addLayer({
-      id: outlineLayerId,
+      id: hoverFillLayerId,
+      type: 'fill',
+      source: sourceId,
+      filter: noHoverFilter,
+      paint: {
+        'fill-color': '#000000',
+        'fill-opacity': 0.22
+      }
+    });
+
+    map.addLayer({
+      id: hoverOutlineLayerId,
       type: 'line',
       source: sourceId,
+      filter: noHoverFilter,
       paint: {
         'line-color': '#ffffff',
-        'line-width': 1.5,
-        'line-opacity': 0.7
+        'line-width': 1.6,
+        'line-opacity': 0.95
       }
     });
 
     setupHoverInteraction(layerId);
   }
 
-  function updateMapColors() {
-    const layerId = 'districts-layer';
-    if (!map.getLayer(layerId)) return;
-
-    const colorExpr = valueType === 'raw' ? getRawColorExpression() : getNormedColorExpression();
-    map.setPaintProperty(layerId, 'fill-color', colorExpr);
-  }
-
   function updateTypeFilter() {
     const layerId = 'districts-layer';
-    const outlineLayerId = 'districts-outline';
     if (!map.getLayer(layerId)) {
       console.log('Layer not found, skipping filter update');
       return;
@@ -316,7 +319,6 @@
     }
 
     map.setFilter(layerId, filter);
-    map.setFilter(outlineLayerId, filter);
   }
 
   function setupHoverInteraction(layerId) {
@@ -330,11 +332,31 @@
       });
     }
 
-    map.on('mousemove', layerId, (e) => {
+    if (hoverMoveHandler) {
+      map.off('mousemove', layerId, hoverMoveHandler);
+    }
+    if (hoverLeaveHandler) {
+      map.off('mouseleave', layerId, hoverLeaveHandler);
+    }
+
+    hoverMoveHandler = (e) => {
       if (e.features.length > 0) {
         map.getCanvas().style.cursor = 'pointer';
         const feature = e.features[0];
         const props = feature.properties;
+        const hoverFilter = [
+          'all',
+          ['==', ['get', 'district_name'], props.district_name],
+          ['==', ['get', 'district_type'], props.district_type]
+        ];
+
+        if (map.getLayer(hoverFillLayerId)) {
+          map.setFilter(hoverFillLayerId, hoverFilter);
+        }
+
+        if (map.getLayer(hoverOutlineLayerId)) {
+          map.setFilter(hoverOutlineLayerId, hoverFilter);
+        }
         
         // Format numbers
         const formatNumber = (num) => {
@@ -371,37 +393,15 @@
         };
 
         const getChangeColor = (value) => {
-          if (value > 0) return 'var(--brandMedGreen)'; // green
-          if (value < 0) return 'var(--brandRed)'; // red
-          return '#ffffbf'; // yellow
+          if (value > 0) return '#007FA3'; // var(--brandMedBlue)
+          if (value < 0) return '#DC4633'; // var(--brandRed)
+          return '#D0D1C9'; // var(--brandGray)
         };
 
-        const changeValue = valueType === 'raw'
-          ? props.raw_diff
-          : getPercentChange(props.normed_2019, props.normed_diff);
+        const changeValue = getPercentChange(props.normed_2019, props.normed_diff);
         const changeColor = getChangeColor(changeValue);
-        const detailSection = valueType === 'raw'
-          ? `
-            <div class="popup-detail-grid">
-              <div>
-                <div class="popup-detail-label">2019 Stops</div>
-                <div class="popup-detail-value">
-                  ${formatNumber(props.total_stops_2019)}
-                </div>
-              </div>
-              <div>
-                <div class="popup-detail-label">2025 Stops</div>
-                <div class="popup-detail-value">
-                  ${formatNumber(props.total_stops_2025)}
-                </div>
-              </div>
-            </div>
-          `
-          : '';
-        const changeLabel = valueType === 'raw' ? 'Change' : 'Percent Change (2019 to 2025)';
-        const changeDisplay = valueType === 'raw'
-          ? `${changeValue > 0 ? '+' : ''}${formatNumber(changeValue)}`
-          : formatPercentChange(changeValue);
+        const changeLabel = 'Percent Change (2019 to 2025)';
+        const changeDisplay = formatPercentChange(changeValue);
 
         // Build popup HTML
         const html = `
@@ -412,7 +412,6 @@
             <p class="popup-subtitle">
               ${props.district_type}
             </p>
-            ${detailSection}
             <div class="popup-change-row">
               <div class="popup-change-label">${changeLabel}</div>
               <div class="popup-change-value" style="color: ${changeColor};">
@@ -425,14 +424,31 @@
         // Set popup content and position
         popup.setLngLat(e.lngLat).setHTML(html).addTo(map);
       }
-    });
+    };
 
-    map.on('mouseleave', layerId, () => {
+    hoverLeaveHandler = () => {
       map.getCanvas().style.cursor = '';
+      if (map.getLayer(hoverFillLayerId)) {
+        map.setFilter(hoverFillLayerId, noHoverFilter);
+      }
+      if (map.getLayer(hoverOutlineLayerId)) {
+        map.setFilter(hoverOutlineLayerId, noHoverFilter);
+      }
       if (popup) {
         popup.remove();
       }
-    });
+    };
+
+    map.on('mousemove', layerId, hoverMoveHandler);
+    map.on('mouseleave', layerId, hoverLeaveHandler);
+  }
+
+  function removeDistrictLayersAndSource() {
+    if (!map) return;
+    if (map.getLayer(hoverOutlineLayerId)) map.removeLayer(hoverOutlineLayerId);
+    if (map.getLayer(hoverFillLayerId)) map.removeLayer(hoverFillLayerId);
+    if (map.getLayer(layerId)) map.removeLayer(layerId);
+    if (map.getSource(sourceId)) map.removeSource(sourceId);
   }
 
   // Store protocol instance globally so we can use it later
@@ -443,33 +459,20 @@
     protocolInstance = new pmtiles.Protocol();
     maplibregl.addProtocol('pmtiles', protocolInstance.tile);
 
-    // Initialize map with CartoDB dark basemap (open source)
     map = new maplibregl.Map({
       container: mapContainer,
       style: {
-        version: 8,
-        glyphs: 'https://demotiles.maplibre.org/font/{fontstack}/{range}.pbf',
-        sources: {
-          'carto-dark': {
-            type: 'raster',
-            tiles: [
-              'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-              'https://b.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png',
-              'https://c.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'
-            ],
-            tileSize: 256,
-            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/">CARTO</a>'
-          }
-        },
-        layers: [
-          {
-            id: 'carto-dark-layer',
-            type: 'raster',
-            source: 'carto-dark',
-            minzoom: 0,
-            maxzoom: 22
-          }
-        ]
+          version: 8,
+          glyphs: 'https://schoolofcities.github.io/fonts/fonts/{fontstack}/{range}.pbf',
+          sprite: 'https://protomaps.github.io/basemaps-assets/sprites/v4/dark',
+          sources: {
+              protomaps: {
+                  type: 'vector',
+                  url: 'https://api.protomaps.com/tiles/v4.json?key=f1d93c3bd5c79742',
+                  attribution: '<a href="https://protomaps.com">Protomaps</a> © <a href="https://openstreetmap.org">OpenStreetMap</a>'
+              }
+          },
+          layers: baseMap
       },
       center: cityCoords[selectedCity].center,
       zoom: cityCoords[selectedCity].zoom,
@@ -506,19 +509,42 @@
 
   :global(.popup-container) {
     padding: 8px;
+    background-color: #000;
+  }
+
+  :global(.maplibregl-popup-content) {
+    background-color: #000;
+    border: 1px solid #000;
+    color: #fff;
+  }
+
+  :global(.maplibregl-popup-anchor-top .maplibregl-popup-tip) {
+    border-bottom-color: #000;
+  }
+
+  :global(.maplibregl-popup-anchor-bottom .maplibregl-popup-tip) {
+    border-top-color: #000;
+  }
+
+  :global(.maplibregl-popup-anchor-left .maplibregl-popup-tip) {
+    border-right-color: #000;
+  }
+
+  :global(.maplibregl-popup-anchor-right .maplibregl-popup-tip) {
+    border-left-color: #000;
   }
 
   :global(.popup-title) {
     margin: 0 0 4px 0;
     font-size: 14px;
     font-weight: 600;
-    color: #000;
+    color: #fff;
   }
 
   :global(.popup-subtitle) {
     margin: 0 0 8px 0;
     font-size: 11px;
-    color: #000;
+    color: #fff;
   }
 
   :global(.popup-detail-grid) {
@@ -536,7 +562,7 @@
   :global(.popup-detail-value) {
     font-size: 13px;
     font-weight: 600;
-    color: #000;
+    color: #fff;
   }
 
   :global(.popup-change-row) {
@@ -546,7 +572,7 @@
 
   :global(.popup-change-label) {
     font-size: 10px;
-    color: #000;
+    color: #fff;
   }
 
   :global(.popup-change-value) {
