@@ -26,11 +26,6 @@
       onTypeFilterChange([type]);
     }
   }
-
-  // Handle "All" button
-  function selectAllTypes() {
-    onTypeFilterChange([]);
-  }
 </script>
 
 <aside class="side-panel">
@@ -65,13 +60,6 @@
   <section class="filter-section">
     <h2>District Types</h2>
     <div class="button-group">
-      <button
-        class="type-button"
-        class:selected={selectedTypes.length === 0}
-        onclick={selectAllTypes}
-      >
-        All
-      </button>
       {#each districtTypes as type}
         <button
           class="type-button"

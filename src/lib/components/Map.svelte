@@ -139,6 +139,7 @@
         });
 
         addDistrictLayers(layerId, sourceId, citySlug);
+        updateTypeFilter();
       } catch (err) {
         console.warn('PMTiles failed, falling back to GeoJSON:', err);
         
@@ -203,6 +204,7 @@
         if (!map.getLayer(layerId)) {
           addDistrictLayersGeoJSON(layerId, sourceId);
         }
+        updateTypeFilter();
         return;
       } catch (err) {
         lastError = err;
